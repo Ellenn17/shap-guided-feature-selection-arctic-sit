@@ -7,8 +7,10 @@ E. Poli, A. Iseni
 ## Overview
 Understanding the drivers of Arctic Sea Ice Thickness (SIT) is challenging due to the large number of correlated meteorological, hydrological, and climate predictors involved.
 This repository implements an interpretable feature selection framework that combines:
-PyCROSL: an evolutionary optimization algorithm inspired by coral reef dynamics
-SHAP (SHapley Additive exPlanations): used as an internal regularization mechanism to guide feature selection toward coherent and interpretable subsets.
+
+- PyCROSL: an evolutionary optimization algorithm inspired by coral reef dynamics
+- SHAP (SHapley Additive exPlanations): used as an internal regularization mechanism to guide feature selection toward coherent and interpretable subsets.
+
 The framework is applied to clustered Arctic regions and evaluates different feature selection strategies under varying constraints.
 
 ## Methodological Summary
