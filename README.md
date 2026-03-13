@@ -12,7 +12,7 @@ SHAP (SHapley Additive exPlanations): used as an internal regularization mechani
 The framework is applied to clustered Arctic regions and evaluates different feature selection strategies under varying constraints.
 
 ## Methodological Summary
-![The workflow implemented in this repository consists of the following steps:](figures/flowchart.png)
+![The workflow implemented in this repository consists of the following steps:](flowchart.png)
 #### 1. Data preprocessing
 Monthly aggregation of heterogeneous datasets
 Construction of lagged predictors (6–12 months)
