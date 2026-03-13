@@ -43,14 +43,6 @@ Mathematics, 11(7), 1666. https://doi.org/10.3390/math11071666
 
 ### Important Note
 
-The files contained in the `Algorithm_settings/` directory of this repository **do not include the full PyCROSL framework**.
+The files contained in the `Algorithm_settings/` directory of this repository do not include the full PyCROSL framework. They only contain a modified version of the main execution script.
 
-They only contain a **modified version of the main execution script**, adapted to:
 
-- Integrate the different SHAP-based alignment regularization term  
-- Implement the fitness configurations described in the paper  
-- Run the Arctic SIT feature selection experiments  
-
-To execute the algorithm correctly, it is necessary to clone or install the complete PyCROSL framework from the official repository linked above.
-
-The modified `main` script provided here is intended to be used **together with the full PyCROSL source code**, and is not a standalone implementation.
