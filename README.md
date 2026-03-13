@@ -17,7 +17,7 @@ The framework is applied to clustered Arctic regions and evaluates different fea
 ![The workflow implemented in this repository consists of the following steps:](flowchart.png)
 #### 1. Data preprocessing
 - Monthly aggregation of heterogeneous datasets
-- Construction of lagged predictors (6–12 months)
+- Construction of lagged predictors (6 and 12 months)
 - Standardization and imputation
 #### 2. Spatial clustering
 PIOMAS sea ice thickness fields clustered into five homogeneous Arctic regions using K-means
