@@ -45,4 +45,5 @@ Mathematics, 11(7), 1666. https://doi.org/10.3390/math11071666
 
 The files contained in the `Algorithm_settings/` directory of this repository do not include the full PyCROSL framework. They only contain a modified version of the main execution script.
 
+To reproduce our results, use commit 23b0961 of PyCROSL.
 
