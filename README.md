@@ -16,18 +16,18 @@ The framework is applied to clustered Arctic regions and evaluates different fea
 ## Methodological Summary
 ![The workflow implemented in this repository consists of the following steps:](flowchart.png)
 #### 1. Data preprocessing
-Monthly aggregation of heterogeneous datasets
-Construction of lagged predictors (6–12 months)
-Standardization and imputation
+- Monthly aggregation of heterogeneous datasets
+- Construction of lagged predictors (6–12 months)
+- Standardization and imputation
 #### 2. Spatial clustering
 PIOMAS sea ice thickness fields clustered into five homogeneous Arctic regions using K-means
 #### 3. Feature selection
-PyCROSL (baseline configuration)
-PyCROSL with SHAP-guided fitness
-Fixed-cardinality variants (N = 10)
+- PyCROSL (baseline configuration)
+- PyCROSL with SHAP-guided fitness
+- Fixed-cardinality variants (N = 10)
 #### 4. Post-selection validation
-Retraining LightGBM models on stable feature subsets
-Independent evaluation of predictive skill
+- Retraining LightGBM models on stable feature subsets
+- Independent evaluation of predictive skill
 
 ## PyCROSL Dependency
 
