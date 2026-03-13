@@ -1,0 +1,171 @@
+DATA DESCRIPTION AND PREPROCESSING
+
+This document describes the datasets and preprocessing steps adopted for
+the analysis of Arctic Sea Ice Thickness (SIT) using machine learning
+methods.
+
+---------------------------------------------------------------------
+1. DATA DESCRIPTION
+---------------------------------------------------------------------
+
+The analysis integrates reanalysis, observational, hydrological, and
+large-scale climate datasets to investigate the drivers of Arctic Sea
+Ice Thickness variability.
+
+---------------------------------------------------------------------
+1.1 PAN-ARCTIC ICE-OCEAN MODELING AND ASSIMILATION SYSTEM (PIOMAS)
+---------------------------------------------------------------------
+
+The Pan-Arctic Ice-Ocean Modeling and Assimilation System (PIOMAS) is a
+reanalysis dataset providing daily and monthly estimates of Arctic Sea
+Ice Thickness (SIT) starting from January 1978.
+
+PIOMAS is based on a coupled sea-ice–ocean model that assimilates
+observations of sea surface temperature, sea ice concentration, and sea
+ice velocity. It is widely used for monitoring Arctic sea ice changes,
+studying Arctic amplification, and validating numerical and statistical
+sea ice models.
+
+The dataset realistically reproduces the mean Pan-Arctic SIT, its
+spatial variability, and the seasonal cycle, as well as long-term trends
+in ice thickness and volume. A known limitation is the absence of direct
+assimilation of in situ or satellite-derived ice thickness observations,
+which can lead to overestimation of thin ice and underestimation of
+thick ice.
+
+PIOMAS data are provided on a generalized curvilinear grid with spatial
+dimensions of 360 × 120, covering latitudes from 45°N to 90°N. In this
+study, Sea Ice Thickness is used as the target variable, while other
+PIOMAS variables are not considered.
+
+---------------------------------------------------------------------
+1.2 GLOBAL HISTORICAL CLIMATOLOGY NETWORK (GHCN)
+---------------------------------------------------------------------
+
+The Global Historical Climatology Network (GHCN-Daily) is a comprehensive
+archive of daily meteorological observations collected from more than
+100,000 stations worldwide and subjected to rigorous quality control
+procedures.
+
+The dataset includes daily measurements of precipitation, snowfall,
+snow depth, and minimum and maximum temperatures. Temporal coverage
+extends from 1860 to 2024, although record length varies across stations.
+
+Each station is uniquely identified by an ID and associated with
+metadata describing its geographical location and elevation.
+
+The variables selected for this study are
+- Liquid precipitation (PRCP, mm)
+- Solid precipitation (SNOW, mm)
+- Snow depth (SNWD, mm)
+- Minimum temperature (TMIN, tenths of °C)
+- Maximum temperature (TMAX, tenths of °C)
+
+Only stations located in Arctic and sub-Arctic regions are considered.
+
+---------------------------------------------------------------------
+1.3 ARCTIC GREAT RIVERS OBSERVATORY (ARCTICGRO)
+---------------------------------------------------------------------
+
+The Arctic Great Rivers Observatory (ArcticGRO) dataset provides daily
+river discharge measurements (m³s) for major Arctic rivers, representing
+freshwater input into the Arctic Ocean.
+
+In this study, five rivers are selected Ob, Yenisei, Lena, Yukon, and
+Mackenzie. For each river, runoff measurements are taken at the most
+downstream available gauging station. The temporal coverage varies by
+river, ranging from several decades to nearly a century.
+
+---------------------------------------------------------------------
+1.4 NOAA TELECONNECTION INDICES
+---------------------------------------------------------------------
+
+Teleconnection indices from NOAA describe large-scale climate patterns
+that influence atmospheric and oceanic variability across distant
+regions.
+
+These indices are not explicitly included in physically-based climate
+models due to their non-local and non-linear nature. However, machine
+learning techniques are able to exploit such relationships, making
+teleconnection indices valuable predictors for Arctic Sea Ice Thickness.
+
+---------------------------------------------------------------------
+2. DATA PREPROCESSING
+---------------------------------------------------------------------
+
+This section describes the preprocessing steps applied to each dataset
+prior to feature selection and machine learning modeling.
+
+---------------------------------------------------------------------
+2.1 PIOMAS SEA ICE THICKNESS PREPROCESSING
+---------------------------------------------------------------------
+
+Sea Ice Thickness from PIOMAS is used as the target variable of the
+analysis. The data are defined over time, latitude, and longitude on a
+curvilinear grid.
+
+To reduce spatial dimensionality and ensure computational feasibility,
+the SIT field is clustered using the K-means algorithm. Five homogeneous
+Arctic regions are identified, and each grid cell is assigned to one
+cluster.
+
+For each cluster, a regional mean SIT time series is computed by
+averaging SIT over all grid cells belonging to the same region. This
+approach preserves dominant spatial patterns while avoiding pixel-wise
+modeling.
+
+The resulting SIT time series exhibit strong seasonality and a clear
+long-term declining trend. Regions characterized by thicker ice show
+higher interannual variability, while thinner-ice regions display lower
+variance and more gradual declines.
+
+---------------------------------------------------------------------
+2.2 GHCN METEOROLOGICAL DATA PREPROCESSING
+---------------------------------------------------------------------
+
+Daily GHCN observations are first filtered to retain only selected
+variables and stations located in Arctic and sub-Arctic regions.
+
+Preprocessing steps include
+- Use of quality-controlled data only
+- Aggregation of daily observations to monthly resolution
+- Computation of monthly means for temperature variables
+- Computation of monthly totals for precipitation, snowfall, and snow
+  depth
+- Conversion of temperature values from tenths of °C to °C
+- Removal of stations with excessive missing data
+
+Each variable-station pair is encoded using a simplified naming
+convention to facilitate feature selection and visualization.
+
+---------------------------------------------------------------------
+2.3 ARCTICGRO HYDROLOGICAL DATA PREPROCESSING
+---------------------------------------------------------------------
+
+Daily discharge data from ArcticGRO are aggregated to monthly mean
+discharge values to ensure temporal consistency with the SIT target.
+
+Additional preprocessing steps include
+- Removal of duplicated or inconsistent records
+- Exclusion of months with insufficient daily data coverage
+- Standardization of discharge units (m³s)
+
+Each river discharge time series is associated with a unique flow
+identifier and used as an independent predictor.
+
+---------------------------------------------------------------------
+2.4 NOAA TELECONNECTION DATA PREPROCESSING
+---------------------------------------------------------------------
+
+Teleconnection indices are provided as monthly time series and therefore
+do not require temporal aggregation.
+
+Preprocessing steps include
+- Selection of indices relevant to Arctic climate variability
+- Temporal alignment with the common analysis period
+- Removal of missing values at the beginning or end of the time series
+- Standardization to zero mean and unit variance
+
+Teleconnection indices are included as large-scale climate predictors,
+allowing the machine learning models to capture non-linear and remote
+climate influences on Arctic Sea Ice Thickness.
