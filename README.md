@@ -1,4 +1,4 @@
-# Interpretable-Feature-Selection-for-Arctic-Sea-Ice-Thickness
+# Uncovering Drivers of Arctic Sea Ice Thickness Through SHAP-Regularized Evolutionary Feature Selection
 PyCROSL + SHAP framework
 This repository contains the code and experiments supporting the paper:
 Interpretable Feature Selection for Arctic Sea Ice Thickness
