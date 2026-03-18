@@ -1,8 +1,8 @@
 # Uncovering Drivers of Arctic Sea Ice Thickness Through SHAP-Regularized Evolutionary Feature Selection
 PyCROSL + SHAP framework
 This repository contains the code and experiments supporting the paper:
-Interpretable Feature Selection for Arctic Sea Ice Thickness
-E. Poli, A. Iseni
+Uncovering Drivers of Arctic Sea Ice Thickness Through SHAP-Regularized Evolutionary Feature Selection
+E. Poli, A. Iseni, M. Sangiorgio, J. Péerez-Aracil, L. Bianchi, B. Soja, S. Salcedo-Sanz, A. Castelletti
 
 ## Overview
 Understanding the drivers of Arctic Sea Ice Thickness (SIT) is challenging due to the large number of correlated meteorological, hydrological, and climate predictors involved.
