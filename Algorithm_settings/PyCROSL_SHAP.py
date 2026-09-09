@@ -40,17 +40,9 @@ pred_dataframe = pd.read_csv('combined_data6_tel12_t_4.csv', index_col=None)
 y = pred_dataframe.iloc[:, -1]
 X = pred_dataframe.iloc[:, :-1]
 
-# Split a blocchi alternati con gap, per evitare di valutare il modello
-# su un singolo regime di trend diverso da quello visto in training
-# (vedi block_split.py). Niente detrend: si allena sui dati con il trend
-# originale, ma train/valid/test sono distribuiti su tutti i regimi.
 n = len(X)
 dev_idx, test_idx, test_gap_idx = block_split(n, block_size=50, test_fraction=0.2, gap=10)
 
-# Secondo livello di split: separa train/valid dentro dev_idx con lo stesso
-# meccanismo a blocchi, cosi' anche valid copre tutti i regimi di trend.
-# block_split lavora su indici 0..len(dev_idx)-1 relativi a dev_idx, quindi
-# li rimappiamo sugli indici originali.
 n_dev = len(dev_idx)
 train_rel_idx, valid_rel_idx, valid_gap_rel_idx = block_split(n_dev, block_size=50, test_fraction=0.25, gap=10)
 train_idx = dev_idx[train_rel_idx]
@@ -64,7 +56,6 @@ y_train = y.iloc[train_idx]
 y_valid = y.iloc[valid_idx]
 y_test = y.iloc[test_idx]
 
-# Creazione dei dataset LightGBM
 d_train = lgb.Dataset(X_train, label=y_train)
 d_valid = lgb.Dataset(X_valid, label=y_valid)
 
@@ -119,18 +110,11 @@ class FS(AbsObjectiveFunc):
     def objective(self, solution):
         X_train_selected = X_train.iloc[:, solution.astype(bool)]
         
-        # Imposta la cross-validation (k-fold)
-        #kf = KFold(n_splits=5, shuffle=True, random_state=42)
-        
-        # Inizializza il modello
         reg = LGBMRegressor(min_data_in_leaf=15, verbosity=-1)
         reg.fit(X_train_selected, y_train)
 
-        # Valuta 
         X_valid_selected = X_valid.iloc[:, solution.astype(bool)]
         valid_pred = reg.predict(X_valid_selected)
-        #fit_val = r2_score(y_valid, val_pred)
-        #print('Validation:', fit_val)
 
         E = (valid_pred - y_valid)**2
         E = E.mean()
@@ -140,8 +124,8 @@ class FS(AbsObjectiveFunc):
 
         P = (shap_values.values[:, selected_features] *
              sign_diff.to_numpy()[:, np.newaxis]).sum(axis=1)   
-        P = P/(np.abs(shap_values.values[:, selected_features]).sum(axis=1)+1e-8)  # Normalizza per la somma dei valori assoluti
-        P = P.mean()  # Prendi la media dell'importanza normalizzata
+        P = P/(np.abs(shap_values.values[:, selected_features]).sum(axis=1)+1e-8)  
+        P = P.mean()  
         
         baseline_pred = np.full_like(y_valid, y_valid.mean())
         baseline_mse = ((baseline_pred - y_valid)**2).mean()
@@ -161,8 +145,7 @@ class FS(AbsObjectiveFunc):
         w1 = 0.2
         w2 = 1 - w1
         fit = w1 * fit1_norm + w2 * fit2_norm
-        
-                         
+                  
         return fit
 
     """
@@ -246,13 +229,10 @@ for i in range(1):
     cro_alg = CRO_SL(objfunc, operators, params)
     solution, obj_value = cro_alg.optimize()
 
-    # Salva la directory di lavoro attuale
     original_dir = os.getcwd()
 
-    #cro_alg.display_report()
     cro_alg.save_solution(os.path.join(output_dir, "solution.csv"))
 
-    # Creazione dei percorsi completi per i file
     solution_file = os.path.join(output_dir, "best_solution.csv")
     population_file = os.path.join(output_dir, "last_population.csv")
     history_file = os.path.join(output_dir, "fit_history.csv")
@@ -268,29 +248,26 @@ for i in range(1):
     )
 
     try:
-        # Cambia la directory di lavoro in output_dir
         os.chdir(output_dir)
 
-        # Ora `display_report` salverà le figure direttamente in `output_dir`
-        figure_path = "fig.eps"  # Nome del file EPS
+        figure_path = "fig.eps" 
         cro_alg.display_report(show_plots=True, save_figure=True, figure_name=figure_path)
 
     finally:
-        # Ripristina la directory di lavoro originale
         os.chdir(original_dir)
 
 
-    # 1. Force plot per il primo campione
+
     force_plot_path = os.path.join(output_dir, "pycrosl.png")
     shap.force_plot(explainer.expected_value, shap_values.values[1, :], X_valid.iloc[0, :])
-    plt.savefig(force_plot_path, format='png')  # Salva come PNG
-    plt.close()  # Chiudi la figura per evitare sovrapposizioni
+    plt.savefig(force_plot_path, format='png')  
+    plt.close() 
 
-    # 3. Summary plot per tutti i valori SHAP
+
     summary_plot_path = os.path.join(output_dir, "shap_summary_plot.png")
     shap.summary_plot(shap_values, X_valid)
-    plt.savefig(summary_plot_path, format='png')  # Salva come PNG
-    plt.close()  # Chiudi la figura
+    plt.savefig(summary_plot_path, format='png') 
+    plt.close() 
 
     toc_run = time.perf_counter()
     print(f"Run {i+1}/1 completato in {toc_run - tic_run:.2f} secondi")
