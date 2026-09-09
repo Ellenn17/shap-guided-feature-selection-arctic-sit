@@ -35,10 +35,6 @@ shap.initjs()
 All the following methods will have to be implemented for the algorithm to work properly
 with the same inputs, except for the constructor
 """
-
-# DATA_FILE, N_RUNS e BASE_DIR possono essere passati da variabile d'ambiente
-# per orchestrare piu' run su dataset diversi senza modificare lo script
-# (vedi run_pycrosl_all_clusters.py)
 DATA_FILE = os.environ.get("PYCROSL_DATA_FILE", "combined_data6_tel12_t_3.csv")
 N_RUNS = int(os.environ.get("PYCROSL_N_RUNS", "5"))
 BASE_DIR = os.environ.get("PYCROSL_BASE_DIR", "results_tele_noshap")
@@ -47,15 +43,9 @@ pred_dataframe = pd.read_csv(DATA_FILE, index_col=None)
 y = pred_dataframe.iloc[:, -1]
 X = pred_dataframe.iloc[:, :-1]
 
-# Stesso split a blocchi alternati con gap usato in PyCROSL_SHAP.py, per
-# confrontare in modo equo i due metodi (con/senza SHAP penalty) sullo
-# stesso identico esperimento. Niente detrend: si allena sui dati con il
-# trend originale, ma train/valid/test sono distribuiti su tutti i regimi.
 n = len(X)
 dev_idx, test_idx, test_gap_idx = block_split(n, block_size=50, test_fraction=0.2, gap=10)
 
-# Secondo livello di split: separa train/valid dentro dev_idx con lo stesso
-# meccanismo a blocchi, cosi' anche valid copre tutti i regimi di trend.
 n_dev = len(dev_idx)
 train_rel_idx, valid_rel_idx, valid_gap_rel_idx = block_split(n_dev, block_size=50, test_fraction=0.25, gap=10)
 train_idx = dev_idx[train_rel_idx]
@@ -69,7 +59,6 @@ y_train = y.iloc[train_idx]
 y_valid = y.iloc[valid_idx]
 y_test = y.iloc[test_idx]
 
-# Creazione dei dataset LightGBM
 d_train = lgb.Dataset(X_train, label=y_train)
 d_valid = lgb.Dataset(X_valid, label=y_valid)
 
@@ -121,19 +110,12 @@ class FS(AbsObjectiveFunc):
     def objective(self, solution):
         X_train_selected = X_train.iloc[:, solution.astype(bool)]
 
-        # Inizializza il modello
         reg = LGBMRegressor(min_data_in_leaf=15, verbosity=-1)
         reg.fit(X_train_selected, y_train)
 
-        # Valuta
         X_valid_selected = X_valid.iloc[:, solution.astype(bool)]
         valid_pred = reg.predict(X_valid_selected)
 
-        # Nessuna SHAP-alignment penalty qui (a differenza di
-        # PyCROSL_SHAP.py): fit1 e' solo l'errore (MSE normalizzato sulla
-        # baseline). Stessi pesi (w1, w2) e stesso schema di normalizzazione
-        # dell'altro script, per rendere il confronto tra i due metodi
-        # (con/senza SHAP) il piu' equo possibile sullo stesso esperimento.
         E = (valid_pred - y_valid)**2
         E = E.mean()
 
@@ -152,7 +134,6 @@ class FS(AbsObjectiveFunc):
         w1 = 0.2
         w2 = 1 - w1
         fit = w1 * fit1_norm + w2 * fit2_norm
-
 
         return fit
 
@@ -236,13 +217,10 @@ for i in range(N_RUNS):
     cro_alg = CRO_SL(objfunc, operators, params)
     solution, obj_value = cro_alg.optimize()
 
-    # Salva la directory di lavoro attuale
     original_dir = os.getcwd()
 
-    #cro_alg.display_report()
     cro_alg.save_solution(os.path.join(output_dir, "solution.csv"))
 
-    # Creazione dei percorsi completi per i file
     solution_file = os.path.join(output_dir, "best_solution.csv")
     population_file = os.path.join(output_dir, "last_population.csv")
     history_file = os.path.join(output_dir, "fit_history.csv")
@@ -258,15 +236,12 @@ for i in range(N_RUNS):
     )
 
     try:
-        # Cambia la directory di lavoro in output_dir
         os.chdir(output_dir)
 
-        # Ora `display_report` salverà le figure direttamente in `output_dir`
-        figure_path = "fig.eps"  # Nome del file EPS
+        figure_path = "fig.eps" 
         cro_alg.display_report(show_plots=True, save_figure=True, figure_name=figure_path)
 
     finally:
-        # Ripristina la directory di lavoro originale
         os.chdir(original_dir)
 
     toc_run = time.perf_counter()
