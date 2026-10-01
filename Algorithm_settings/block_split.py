@@ -1,16 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Split a blocchi alternati con gap/buffer, per confrontare in modo equo
-feature selection (tutte le features vs features selezionate) su una
-serie con trend non stazionario.
-
-Schema:
-- la serie viene divisa in blocchi contigui di lunghezza `block_size`
-- ogni blocco e' assegnato a train o test alternando, secondo `test_fraction`
-- un gap di `gap` punti viene scartato (non usato in train ne' in test)
-  ad ogni confine train/test, per evitare leakage da autocorrelazione locale
-"""
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,26 +6,26 @@ import matplotlib.pyplot as plt
 
 def block_split(n, block_size=80, test_fraction=0.2, gap=10, seed=None):
     """
-    Genera indici train/test a blocchi alternati con buffer.
+    Generates alternating train/test block indices with buffers.
 
     Parameters
     ----------
     n : int
-        Numero totale di timestep.
+        Total number of timesteps.
     block_size : int
-        Lunghezza di ciascun blocco contiguo.
+        Length of each contiguous block.
     test_fraction : float
-        Frazione approssimativa di blocchi da assegnare al test.
+        Approximate fraction of blocks to assign to the test set.
     gap : int
-        Numero di punti da scartare ad ogni confine train/test.
-    seed : int o None
-        Se fornito, mescola l'assegnazione dei blocchi in modo riproducibile
-        invece di alternarli in modo regolare (1 ogni K).
+        Number of points to discard at each train/test boundary.
+    seed : int or None
+        If provided, shuffles block assignments reproducibly
+        instead of alternating them regularly (1 every K).
 
     Returns
     -------
     train_idx, test_idx, gap_idx : np.ndarray
-        Indici (0-based) assegnati rispettivamente a train, test e gap.
+        Indices (0-based) assigned to train, test, and gap sets, respectively.
     """
     n_blocks = int(np.ceil(n / block_size))
     block_bounds = [(i * block_size, min((i + 1) * block_size, n)) for i in range(n_blocks)]
@@ -45,9 +33,6 @@ def block_split(n, block_size=80, test_fraction=0.2, gap=10, seed=None):
     step = max(1, round(1 / test_fraction))
     is_test_block = np.zeros(n_blocks, dtype=bool)
     if seed is None:
-        # ogni K-esimo blocco va in test, partendo da un offset centrale
-        # per evitare che il primo o l'ultimo blocco (spesso piu' instabili)
-        # finiscano sempre in test
         offset = step // 2
         is_test_block[offset::step] = True
     else:
@@ -66,8 +51,7 @@ def block_split(n, block_size=80, test_fraction=0.2, gap=10, seed=None):
 
     train_idx = np.concatenate(train_idx) if train_idx else np.array([], dtype=int)
     test_idx = np.concatenate(test_idx) if test_idx else np.array([], dtype=int)
-
-    # applica il gap: rimuove da train i punti entro `gap` da un confine con un blocco di test
+  
     train_set = set(train_idx.tolist())
     test_set = set(test_idx.tolist())
     gap_set = set()
@@ -75,11 +59,9 @@ def block_split(n, block_size=80, test_fraction=0.2, gap=10, seed=None):
     for i, (start, end) in enumerate(block_bounds):
         if not is_test_block[i]:
             continue
-        # buffer a sinistra del blocco di test
         for p in range(max(0, start - gap), start):
             if p in train_set:
                 gap_set.add(p)
-        # buffer a destra del blocco di test
         for p in range(end, min(n, end + gap)):
             if p in train_set:
                 gap_set.add(p)
@@ -103,7 +85,6 @@ def plot_split(y, train_idx, test_idx, gap_idx, title, ax=None):
 
 
 def _contiguous_runs(idx):
-    """Spezza un array di indici (eventualmente non contiguo) in run contigui."""
     if len(idx) == 0:
         return []
     runs = []
@@ -119,8 +100,6 @@ def _contiguous_runs(idx):
 
 
 def plot_split_with_trends(y, train_idx, test_idx, title, ax=None):
-    """Plot in stile 'Time Series with Segmented Trends': serie blu + rette di
-    regressione (arancio per train, rosso per test) su ciascun blocco contiguo."""
     if ax is None:
         fig, ax = plt.subplots(figsize=(13, 4))
     x = np.arange(len(y))
@@ -158,9 +137,6 @@ if __name__ == "__main__":
     y = df["SIT_1(t)"].values
     n = len(y)
 
-    # Split definitivo: block_size=50, test_fraction=0.2, gap=10
-    # (scelto confrontando block_size=50 vs 80 sui trend locali, vedi
-    # block_split_comparison.png)
     train_idx, test_idx, gap_idx = block_split(
         n, block_size=50, test_fraction=0.2, gap=10
     )
@@ -168,17 +144,17 @@ if __name__ == "__main__":
     np.save("train_idx.npy", train_idx)
     np.save("test_idx.npy", test_idx)
     np.save("gap_idx.npy", gap_idx)
-    print(f"Split definitivo salvato: train={len(train_idx)} ({len(train_idx)/n:.1%}), "
+    print(f"Split saved: train={len(train_idx)} ({len(train_idx)/n:.1%}), "
           f"test={len(test_idx)} ({len(test_idx)/n:.1%}), "
           f"gap={len(gap_idx)} ({len(gap_idx)/n:.1%})")
 
     fig, ax = plt.subplots(figsize=(13, 4))
     plot_split_with_trends(
         y, train_idx, test_idx,
-        title=(f"Split definitivo: block_size=50, test_fraction=0.2, gap=10 | "
+        title=(f"Split: block_size=50, test_fraction=0.2, gap=10 | "
                f"train={len(train_idx)} test={len(test_idx)} gap={len(gap_idx)}"),
         ax=ax,
     )
     plt.tight_layout()
     plt.savefig("block_split_final.png", dpi=120)
-    print("Plot salvato in block_split_final.png")
+    print("Plot saved in block_split_final.png")
